@@ -1,11 +1,25 @@
 [project]
-name = "mirofish-backend"
+name = "mirofish-cli-agy"
 version = "0.1.0"
-description = "MiroFish - A Simple & Universal Swarm Intelligence Engine, Predict Anything"
+description = "Universal Swarm Intelligence & Social Simulation Prediction Engine powered by Google Antigravity CLI (agy) and Claude Code CLI"
+readme = "README.md"
 requires-python = ">=3.11,<3.13"
 license = { text = "AGPL-3.0" }
 authors = [
+    { name = "almazid-shisir" },
     { name = "MiroFish Team" }
+]
+keywords = [
+    "swarm-intelligence",
+    "multi-agent",
+    "simulation",
+    "prediction-engine",
+    "antigravity",
+    "gemini",
+    "graphrag",
+    "camel-oasis",
+    "social-simulation",
+    "claude-code"
 ]
 
 dependencies = [
@@ -32,6 +46,7 @@ dependencies = [
 
 [project.scripts]
 mirofish = "app.cli:main"
+mirofish-agy = "app.cli:main"
 
 [build-system]
 requires = ["hatchling"]

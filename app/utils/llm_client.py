@@ -18,12 +18,12 @@ RETRY_BASE_DELAY = 2.0  # seconds
 
 
 class LLMClient:
-    """LLM Client — supports claude-cli and codex-cli."""
+    """LLM Client — supports agy-cli, claude-cli, and codex-cli."""
 
     def __init__(self, provider: Optional[str] = None):
-        self.provider = (provider or Config.LLM_PROVIDER or "claude-cli").lower()
-        if self.provider not in ("claude-cli", "codex-cli"):
-            raise ValueError(f"Unsupported LLM provider: {self.provider!r}. Use 'claude-cli' or 'codex-cli'.")
+        self.provider = (provider or Config.LLM_PROVIDER or "agy-cli").lower()
+        if self.provider not in ("claude-cli", "codex-cli", "agy-cli"):
+            raise ValueError(f"Unsupported LLM provider: {self.provider!r}. Use 'agy-cli', 'claude-cli' or 'codex-cli'.")
 
     def _split_system_message(self, messages: List[Dict[str, str]]):
         """Split system message from conversation messages."""
@@ -42,8 +42,10 @@ class LLMClient:
         return system_text, conversation
 
     def _clean_content(self, content: str) -> str:
-        """Remove <think> tags from reasoning models."""
-        return re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+        """Remove <think> or <thought> tags from reasoning models."""
+        content = re.sub(r'<think>[\s\S]*?</think>', '', content)
+        content = re.sub(r'<thought>[\s\S]*?</thought>', '', content)
+        return content.strip()
 
     def chat(
         self,
@@ -58,7 +60,9 @@ class LLMClient:
             try:
                 if self.provider == "codex-cli":
                     return self._chat_codex_cli(messages, temperature, max_tokens, response_format)
-                return self._chat_claude_cli(messages, temperature, max_tokens, response_format)
+                elif self.provider == "claude-cli":
+                    return self._chat_claude_cli(messages, temperature, max_tokens, response_format)
+                return self._chat_agy_cli(messages, temperature, max_tokens, response_format)
             except RuntimeError as exc:
                 last_error = exc
                 if attempt < MAX_RETRIES - 1:
@@ -66,6 +70,53 @@ class LLMClient:
                     logger.warning(f"LLM call failed (attempt {attempt + 1}/{MAX_RETRIES}), retrying in {delay}s: {exc}")
                     time.sleep(delay)
         raise last_error
+
+    def _chat_agy_cli(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float,
+        max_tokens: int,
+        response_format: Optional[Dict] = None
+    ) -> str:
+        """Chat via Antigravity CLI (agy)."""
+        system_text, conversation = self._split_system_message(messages)
+
+        prompt_parts = []
+        if system_text:
+            prompt_parts.append(f"SYSTEM INSTRUCTIONS:\n{system_text}\n")
+
+        if response_format and response_format.get("type") == "json_object":
+            prompt_parts.append("IMPORTANT: Respond with valid JSON only. No markdown formatting, no explanation, just pure valid JSON.\n")
+
+        for msg in conversation:
+            role = msg.get("role", "user").upper()
+            prompt_parts.append(f"{role}: {msg['content']}")
+
+        prompt = "\n\n".join(prompt_parts)
+
+        try:
+            result = subprocess.run(
+                ["agy", "-p", prompt, "--disable-slash-commands", "--output-format", "json"],
+                capture_output=True, text=True, timeout=300,
+                cwd="/tmp"
+            )
+
+            if result.returncode != 0:
+                logger.error(f"agy CLI error: {result.stderr[:200]}")
+                raise RuntimeError(f"agy CLI failed: {result.stderr[:200]}")
+
+            try:
+                output = json.loads(result.stdout)
+                if output.get("status") == "ERROR":
+                    raise RuntimeError(f"agy CLI returned error: {output.get('error', 'unknown error')}")
+                content = output.get("response", output.get("result", result.stdout))
+            except json.JSONDecodeError:
+                content = result.stdout.strip()
+
+            return self._clean_content(content)
+
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("agy CLI timed out after 300s")
 
     def _chat_claude_cli(
         self,

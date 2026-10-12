@@ -525,7 +525,7 @@ def cmd_doctor() -> int:
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     env_path = os.path.join(repo_root, ".env")
 
-    valid_providers = ("claude-cli", "codex-cli")
+    valid_providers = ("claude-cli", "codex-cli", "agy-cli")
 
     def provider_set() -> bool:
         return bool(os.environ.get("LLM_PROVIDER", "").strip())
@@ -546,7 +546,7 @@ def cmd_doctor() -> int:
         DoctorCheck(
             name="LLM_PROVIDER set",
             check=provider_set,
-            hint="export LLM_PROVIDER=claude-cli (or codex-cli) in .env",
+            hint="export LLM_PROVIDER=agy-cli (or claude-cli, codex-cli) in .env",
         ),
         DoctorCheck(
             name="LLM_PROVIDER valid",
@@ -559,15 +559,21 @@ def cmd_doctor() -> int:
     # otherwise the row is noise on top of the LLM_PROVIDER valid failure.
     if Config.LLM_PROVIDER in valid_providers:
         provider = Config.LLM_PROVIDER
+        provider_binaries = {
+            "claude-cli": "claude",
+            "codex-cli": "codex",
+            "agy-cli": "agy",
+        }
+        binary_name = provider_binaries.get(provider, provider)
 
         def provider_binary_on_path() -> bool:
-            return shutil.which(provider) is not None
+            return shutil.which(binary_name) is not None
 
         checks.append(
             DoctorCheck(
-                name=f"{provider} binary on PATH",
+                name=f"{binary_name} binary on PATH",
                 check=provider_binary_on_path,
-                hint=f"install the {provider} binary or add it to PATH",
+                hint=f"install the {binary_name} binary or add it to PATH",
             )
         )
 

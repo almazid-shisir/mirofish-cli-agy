@@ -61,7 +61,7 @@ Machine-readable verdict for agent consumption — prediction, confidence (0-1),
 ## Config
 
 `.env` file at repo root. Key vars:
-- `LLM_PROVIDER` — `claude-cli` (default) or `codex-cli`. Validated at `main()` startup — any other value (including `openai`) exits 1 with `config error: LLM_PROVIDER must be 'claude-cli' or 'codex-cli'`. `--help` skips validation so metadata commands always work.
+- `LLM_PROVIDER` — `agy-cli` (default for Google Antigravity), `claude-cli`, or `codex-cli`. Validated at `main()` startup — any other value exits 1 with config error. `--help` skips validation so metadata commands always work.
 
 ## Gotchas
 - `mirofish runs list` returns a slim summary (`run_id`, `status`, `created_at`, `artifact_count`) so agent output stays narrow. Use `runs status <run_id>` for the full manifest.

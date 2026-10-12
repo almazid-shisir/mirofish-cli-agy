@@ -38,7 +38,7 @@ class Config:
 
     DEBUG = _get_bool_env("DEBUG", False)
 
-    LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "claude-cli").strip().lower()
+    LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "agy-cli").strip().lower()
 
     DATA_DIR = _resolve_path("data/graphs", "DATA_DIR")
 
@@ -70,7 +70,7 @@ class Config:
         """Validate required configuration."""
         errors: list[str] = []
 
-        if cls.LLM_PROVIDER not in ("claude-cli", "codex-cli"):
-            errors.append(f"LLM_PROVIDER must be 'claude-cli' or 'codex-cli', got '{cls.LLM_PROVIDER}'")
+        if cls.LLM_PROVIDER not in ("claude-cli", "codex-cli", "agy-cli"):
+            errors.append(f"LLM_PROVIDER must be 'claude-cli', 'codex-cli', or 'agy-cli', got '{cls.LLM_PROVIDER}'")
 
         return errors

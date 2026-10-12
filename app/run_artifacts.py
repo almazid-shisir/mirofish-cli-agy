@@ -106,6 +106,20 @@ class RunStore:
         manifests.sort(key=lambda item: item.get("created_at", ""), reverse=True)
         return manifests[:limit]
 
+    def read_json(self, run_id: str, rel_path: str) -> Optional[Any]:
+        path = os.path.join(self.run_dir(run_id), rel_path)
+        if not os.path.exists(path):
+            return None
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def read_text(self, run_id: str, rel_path: str) -> Optional[str]:
+        path = os.path.join(self.run_dir(run_id), rel_path)
+        if not os.path.exists(path):
+            return None
+        with open(path, "r", encoding="utf-8") as handle:
+            return handle.read()
+
     def write_json(self, run_id: str, rel_path: str, payload: Any) -> str:
         output_path = os.path.join(self.run_dir(run_id), rel_path)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

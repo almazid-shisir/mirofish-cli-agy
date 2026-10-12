@@ -145,12 +145,45 @@ cp .env.example .env
 ```
 
 ```env
-# LLM Provider Configuration
+# LLM_PROVIDER Configuration
 # agy-cli: Uses Google Antigravity CLI (agy -p) [Default]
 # claude-cli: Uses Anthropic Claude Code CLI (claude -p)
 # codex-cli: Uses OpenAI Codex CLI (codex exec)
 LLM_PROVIDER=agy-cli
 ```
+
+---
+
+## 🔌 Model Context Protocol (MCP) Server
+
+MiroFish includes a built-in FastMCP server (`mirofish-mcp`), enabling **Google Antigravity CLI (`agy`)**, Claude Desktop, and agentic workflows to launch, control, and query swarm simulations directly via MCP tool calls.
+
+### 1. Register in Antigravity CLI
+
+```bash
+# Register with agy
+agy mcp add mirofish /root/.local/bin/mirofish-mcp
+
+# Verify registration
+agy mcp list
+```
+
+### 2. Available MCP Tools:
+
+| MCP Tool | Description |
+| :--- | :--- |
+| `mirofish_start_simulation` | Start multi-agent simulation (`files`, `requirement`, `max_rounds`, `run_in_background`) |
+| `mirofish_get_status` | Query execution progress, phase (`graph_building`, `simulation`, etc.), and artifacts |
+| `mirofish_list_runs` | List previous simulation runs, timestamps, and status |
+| `mirofish_get_verdict` | Retrieve structured prediction `verdict.json` |
+| `mirofish_get_report` | Retrieve comprehensive markdown analysis `report.md` |
+| `mirofish_get_knowledge_graph` | Retrieve extracted GraphRAG ontology, entities, and relationships |
+| `mirofish_get_agents` | Retrieve generated persona agent profiles and debate timeline |
+| `mirofish_doctor` | Run engine, provider bridge, and dependency diagnostics |
+
+### 3. Asynchronous & Long-Running Workflows
+
+Simulations with dozens of agents running multiple debate rounds take time. Set `run_in_background=True` when invoking `mirofish_start_simulation` to run asynchronously in a dedicated worker thread. The tool returns immediately with a `run_id`, allowing Antigravity CLI to periodically poll `mirofish_get_status(run_id)` without blocking or hitting client timeouts.
 
 ---
 

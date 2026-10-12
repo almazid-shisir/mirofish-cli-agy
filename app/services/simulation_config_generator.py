@@ -863,6 +863,21 @@ Return JSON format (no markdown):
 
     def _generate_agent_config_by_rule(self, entity: EntityNode) -> Dict[str, Any]:
         """Generate a single Agent configuration based on rules (general daily patterns)"""
+        import random
+
+        if entity.attributes.get("stance"):
+            return {
+                "activity_level": round(random.uniform(0.5, 0.85), 2),
+                "posts_per_hour": round(random.uniform(0.5, 1.5), 2),
+                "comments_per_hour": round(random.uniform(1.0, 3.0), 2),
+                "active_hours": list(range(random.randint(7, 9), random.randint(22, 24))),
+                "response_delay_min": random.randint(2, 10),
+                "response_delay_max": random.randint(20, 60),
+                "sentiment_bias": float(entity.attributes.get("sentiment_bias", 0.0)),
+                "stance": str(entity.attributes.get("stance", "neutral")),
+                "influence_weight": round(random.uniform(0.8, 1.8), 2),
+            }
+
         entity_type = (entity.get_entity_type() or "Unknown").lower()
 
         if entity_type in ["university", "governmentagency", "ngo"]:

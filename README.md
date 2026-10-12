@@ -33,6 +33,7 @@ Run a predictive simulation using the MiroFish MCP server:
 2. Start simulation with `mirofish_start_simulation`:
    - files: ["examples/test_scenario.md"]
    - requirement: "Predict public adoption, backlash risks, and 30-day sentiment trajectory"
+   - agent_count: 20
    - max_rounds: 3
    - run_in_background: true
 3. Check execution progress using `mirofish_get_status` until phase is 'completed'.
@@ -46,7 +47,7 @@ Run a predictive simulation using the MiroFish MCP server:
 Direct CLI terminal execution alternative:
 
 ```bash
-mirofish run --files examples/test_scenario.md --requirement "Predict public sentiment and adoption" --max-rounds 3 --json
+mirofish run --files examples/test_scenario.md --requirement "Predict public sentiment and adoption" --agent-count 20 --max-rounds 3 --json
 ```
 
 ---
@@ -57,7 +58,7 @@ The built-in MCP server (`mirofish-mcp`) provides 8 tools:
 
 | Tool | Parameters | Description |
 | :--- | :--- | :--- |
-| `mirofish_start_simulation` | `files`, `requirement`, `max_rounds`, `run_in_background` | Launch multi-agent prediction simulation |
+| `mirofish_start_simulation` | `files`, `requirement`, `max_rounds`, `agent_count`, `run_in_background` | Launch multi-agent prediction simulation |
 | `mirofish_get_status` | `run_id` | Check execution progress and phase |
 | `mirofish_list_runs` | None | List previous simulation runs |
 | `mirofish_get_verdict` | `run_id` | Get quantitative prediction (`verdict.json`) |

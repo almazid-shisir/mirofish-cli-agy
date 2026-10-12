@@ -48,6 +48,7 @@ def mirofish_start_simulation(
     files: List[str],
     requirement: str,
     max_rounds: int = 5,
+    agent_count: int = 20,
     platform: str = "parallel",
     run_in_background: bool = True,
 ) -> Dict[str, Any]:
@@ -57,6 +58,7 @@ def mirofish_start_simulation(
         files: List of file paths to ingest (.pdf, .md, .txt).
         requirement: Prediction prompt or requirement description (plain English).
         max_rounds: Number of simulation debate rounds (default: 5).
+        agent_count: Target swarm population size (number of diverse agents to simulate, default: 20).
         platform: Social arena platform ('parallel', 'twitter', or 'reddit').
         run_in_background: If True, returns immediately with run_id while running in background.
                            If False, waits until completion and returns the final verdict.
@@ -76,6 +78,7 @@ def mirofish_start_simulation(
         requirement=requirement,
         platform=platform,
         max_rounds=max(1, min(max_rounds, 50)),
+        agent_count=max(4, min(agent_count, 200)),
         output_dir=output_dir,
         json=True,
     )

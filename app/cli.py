@@ -414,10 +414,12 @@ def _run_pipeline(args: argparse.Namespace) -> Dict[str, Any]:
         simulation_id = simulation_state.simulation_id
         store.update(run_id, simulation_id=simulation_id, status="simulation_preparing", task_progress=0, task_message="Simulation created")
 
+        target_agent_count = getattr(args, "agent_count", 20) or 20
         prepare_result = session.start_simulation_preparation(
             simulation_id=simulation_id,
             use_llm_for_profiles=True,
             parallel_profile_count=DEFAULT_PARALLEL_PROFILE_COUNT,
+            target_agent_count=target_agent_count,
         )
         if prepare_result.get("task_id"):
             store.update(run_id, prepare_task_id=prepare_result["task_id"], status="simulation_preparing")
@@ -637,6 +639,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument("--platform", choices=("parallel", "twitter", "reddit"), default="parallel")
     run_parser.add_argument("--max-rounds", type=int)
+    run_parser.add_argument(
+        "--agent-count",
+        type=int,
+        default=20,
+        help="Target swarm population size / number of agents to simulate (default: 20)",
+    )
     run_parser.add_argument("--wait", action="store_true", help="Accepted for consistency; end-to-end run waits by default")
     run_parser.add_argument("--output-dir")
     run_parser.add_argument("--json", action="store_true")

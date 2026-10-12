@@ -177,6 +177,173 @@ class OasisProfileGenerator:
         "mediaoutlet", "company", "institution", "group", "community"
     ]
 
+    COHORT_ARCHETYPES = [
+        {
+            "role": "Early Adopter & Tech Enthusiast",
+            "stance": "supportive",
+            "sentiment_bias": 0.75,
+            "age_range": (21, 33),
+            "mbti": "ENTP",
+            "professions": ["Software Engineer", "Digital Marketer", "Tech Analyst", "Product Designer"],
+            "tone": "enthusiastic, forward-looking, and inquisitive",
+        },
+        {
+            "role": "Cost-Conscious Everyday User",
+            "stance": "opposing",
+            "sentiment_bias": -0.70,
+            "age_range": (27, 52),
+            "mbti": "ISFJ",
+            "professions": ["Registered Nurse", "High School Teacher", "Store Associate", "Accountant"],
+            "tone": "pragmatic, budget-conscious, and vocal about household financial burdens",
+        },
+        {
+            "role": "Vocal Critic & Rights Advocate",
+            "stance": "opposing",
+            "sentiment_bias": -0.85,
+            "age_range": (24, 46),
+            "mbti": "ENFP",
+            "professions": ["Community Organizer", "Freelance Writer", "Legal Assistant", "Civic Researcher"],
+            "tone": "urgent, critical, demanding transparency, fairness, and strict accountability",
+        },
+        {
+            "role": "Commercial Operator & Business Owner",
+            "stance": "pragmatic",
+            "sentiment_bias": -0.35,
+            "age_range": (35, 58),
+            "mbti": "ESTJ",
+            "professions": ["Logistics Contractor", "Retail Shopkeeper", "Courier Fleet Owner", "Small Merchant"],
+            "tone": "bottom-line focused, operational, measuring overhead vs business viability",
+        },
+        {
+            "role": "Analytical Observer & Policy Researcher",
+            "stance": "neutral",
+            "sentiment_bias": 0.05,
+            "age_range": (29, 60),
+            "mbti": "INTP",
+            "professions": ["Policy Analyst", "Journalist", "University Researcher", "Data Consultant"],
+            "tone": "objective, analytical, weighing evidence and questioning assumptions from both sides",
+        },
+        {
+            "role": "Traditionalist & Senior Citizen",
+            "stance": "skeptical",
+            "sentiment_bias": -0.50,
+            "age_range": (56, 70),
+            "mbti": "ISTJ",
+            "professions": ["Retired Civil Servant", "Consultant", "Community Elder", "Independent Resident"],
+            "tone": "skeptical of unproven technological disruption, valuing reliability and stability",
+        },
+        {
+            "role": "Youth & Social Reformer",
+            "stance": "supportive",
+            "sentiment_bias": 0.60,
+            "age_range": (19, 26),
+            "mbti": "INFJ",
+            "professions": ["Graduate Student", "Environmental Intern", "Urban Planning Student"],
+            "tone": "idealistic, socially conscious, championing systemic modernization and sustainability",
+        },
+        {
+            "role": "Independent Gig Worker",
+            "stance": "opposing",
+            "sentiment_bias": -0.55,
+            "age_range": (23, 40),
+            "mbti": "ESTP",
+            "professions": ["Rideshare Driver", "Delivery Courier", "Independent Contractor"],
+            "tone": "direct, working-class, keenly aware of day-to-day friction and price volatility",
+        },
+    ]
+
+    POPULATION_FIRST_NAMES = [
+        "Alex", "Sarah", "Michael", "Elena", "Tariq", "Jessica", "David", "Amina",
+        "Marcus", "Chloe", "Liam", "Sophia", "Wei", "Priya", "Carlos", "Fatima",
+        "Daniel", "Hannah", "Julian", "Fatou", "Ryan", "Maya", "Kenji", "Zara",
+        "Nusrat", "Arthur", "Oliver", "Grace", "Samira", "Leo", "Lucas", "Emma"
+    ]
+
+    POPULATION_LAST_NAMES = [
+        "Chen", "Miller", "Kowalski", "Patel", "Johnson", "Rahman", "Silva", "Taylor",
+        "Novak", "Kim", "Ahmed", "Santos", "Tanaka", "O'Connor", "Dubois", "Ali",
+        "Hossain", "Gomez", "Williams", "Muller", "Khan", "Alvarez", "Rossi", "Bauer"
+    ]
+
+    def expand_entities_to_population(
+        self,
+        entities: List[EntityNode],
+        target_count: int = 20
+    ) -> List[EntityNode]:
+        """
+        Expand base graph entities into a realistic demographic population cohort
+        so that swarm simulations reflect genuine multi-agent collective intelligence.
+        """
+        if not entities or len(entities) >= target_count:
+            return entities[:target_count] if entities else []
+
+        expanded: List[EntityNode] = list(entities)
+        deficit = target_count - len(entities)
+
+        # Identify group entities or collective cohorts
+        collective_keywords = [
+            "commuter", "company", "group", "student", "user", "citizen",
+            "public", "worker", "people", "advocate", "association", "driver",
+            "client", "customer", "business", "merchant", "resident", "staff"
+        ]
+        group_entities = [
+            e for e in entities
+            if self._is_group_entity(e.get_entity_type() or "")
+            or any(kw in e.name.lower() for kw in collective_keywords)
+        ]
+        pool = group_entities if group_entities else entities
+
+        for i in range(deficit):
+            base_entity = pool[i % len(pool)]
+            archetype = self.COHORT_ARCHETYPES[i % len(self.COHORT_ARCHETYPES)]
+            first_name = self.POPULATION_FIRST_NAMES[(i * 3 + 7) % len(self.POPULATION_FIRST_NAMES)]
+            last_name = self.POPULATION_LAST_NAMES[(i * 5 + 11) % len(self.POPULATION_LAST_NAMES)]
+            age = random.randint(archetype["age_range"][0], archetype["age_range"][1])
+            gender = "female" if (i % 2 == 0) else "male"
+            profession = archetype["professions"][i % len(archetype["professions"])]
+
+            persona_name = f"{first_name} {last_name} ({base_entity.name} - {archetype['role']})"
+            entity_type = base_entity.get_entity_type() or "Person"
+
+            bio = f"{profession} representing {base_entity.name}. Stance: {archetype['stance']}. Tone: {archetype['tone']}."
+            persona_desc = (
+                f"{first_name} {last_name} is a {age}-year-old {profession} active in public discussions concerning {base_entity.name}. "
+                f"They communicate with a {archetype['tone']} tone. "
+                f"Their core position on {base_entity.name} matters is {archetype['stance']} "
+                f"(sentiment bias: {archetype['sentiment_bias']:+.2f}). "
+                f"On social media, they actively share their personal experiences, interact with peers, and articulate their viewpoint."
+            )
+
+            cohort_data = {
+                "bio": bio,
+                "persona": persona_desc,
+                "age": age,
+                "gender": gender,
+                "mbti": archetype["mbti"],
+                "country": random.choice(self.COUNTRIES),
+                "profession": profession,
+                "stance": archetype["stance"],
+                "sentiment_bias": archetype["sentiment_bias"],
+                "interested_topics": [base_entity.name, archetype["role"], "Current Affairs"],
+                "karma": random.randint(500, 30000),
+                "follower_count": random.randint(100, 8000),
+                "friend_count": random.randint(50, 600),
+                "statuses_count": random.randint(200, 3500),
+            }
+
+            new_node = EntityNode(
+                uuid=f"{base_entity.uuid}-cohort-{i+1}",
+                name=persona_name,
+                labels=["Entity", entity_type, "CohortMember"],
+                summary=persona_desc,
+                attributes={"cohort_persona": cohort_data, **cohort_data},
+                related_edges=[],
+                related_nodes=[]
+            )
+            expanded.append(new_node)
+
+        return expanded
+
     def __init__(
         self,
         graph_id: Optional[str] = None,
@@ -774,7 +941,8 @@ Important:
         graph_id: Optional[str] = None,
         parallel_count: int = 5,
         realtime_output_path: Optional[str] = None,
-        output_platform: str = "reddit"
+        output_platform: str = "reddit",
+        target_agent_count: Optional[int] = None,
     ) -> List[OasisAgentProfile]:
         """
         Batch generate Agent Profiles from entities (with parallel generation support)
@@ -787,6 +955,7 @@ Important:
             parallel_count: Number of parallel generations, default 5
             realtime_output_path: File path for real-time writing (if provided, writes after each generation)
             output_platform: Output platform format ("reddit" or "twitter")
+            target_agent_count: Target swarm population size (expands cohorts if higher than seed entities)
 
         Returns:
             List of Agent Profiles
@@ -797,6 +966,12 @@ Important:
         # Set graph_id for graph retrieval
         if graph_id:
             self.graph_id = graph_id
+
+        if target_agent_count and target_agent_count > len(entities):
+            logger.info(
+                f"Target population {target_agent_count} requested; expanding {len(entities)} seed entities into demographic cohort..."
+            )
+            entities = self.expand_entities_to_population(entities, target_count=target_agent_count)
 
         if use_llm and self.is_cli_provider:
             cli_parallel_limit = 4
@@ -848,6 +1023,32 @@ Important:
             entity_type = entity.get_entity_type() or "Entity"
 
             try:
+                # If pre-synthesized cohort persona exists, use directly
+                if entity.attributes.get("cohort_persona"):
+                    cohort = entity.attributes["cohort_persona"]
+                    user_name = self._generate_username(f"{cohort.get('profession', 'user')}_{idx}")
+                    profile = OasisAgentProfile(
+                        user_id=idx,
+                        user_name=user_name,
+                        name=entity.name,
+                        bio=cohort.get("bio", f"{entity_type}: {entity.name}"),
+                        persona=cohort.get("persona", entity.summary),
+                        karma=cohort.get("karma", random.randint(500, 5000)),
+                        friend_count=cohort.get("friend_count", random.randint(50, 500)),
+                        follower_count=cohort.get("follower_count", random.randint(100, 1000)),
+                        statuses_count=cohort.get("statuses_count", random.randint(100, 2000)),
+                        age=cohort.get("age"),
+                        gender=cohort.get("gender"),
+                        mbti=cohort.get("mbti"),
+                        country=cohort.get("country"),
+                        profession=cohort.get("profession"),
+                        interested_topics=cohort.get("interested_topics", []),
+                        source_entity_uuid=entity.uuid,
+                        source_entity_type=entity_type,
+                    )
+                    self._print_generated_profile(entity.name, entity_type, profile)
+                    return idx, profile, None
+
                 profile = self.generate_profile_from_entity(
                     entity=entity,
                     user_id=idx,

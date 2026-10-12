@@ -277,7 +277,8 @@ class SimulationManager:
         defined_entity_types: Optional[List[str]] = None,
         use_llm_for_profiles: bool = True,
         progress_callback: Optional[callable] = None,
-        parallel_profile_count: int = 3
+        parallel_profile_count: int = 3,
+        target_agent_count: int = 20,
     ) -> SimulationState:
         """
         Prepare simulation environment (fully automated)
@@ -297,6 +298,7 @@ class SimulationManager:
             use_llm_for_profiles: Whether to use LLM to generate detailed personas
             progress_callback: Progress callback function (stage, progress, message)
             parallel_profile_count: Number of personas to generate in parallel, default 3
+            target_agent_count: Target swarm population size (default 20 agents)
 
         Returns:
             SimulationState
@@ -347,19 +349,26 @@ class SimulationManager:
                 self._save_simulation_state(state)
                 return state
             
-            # ========== Phase 2: Generate Agent Profiles ==========
-            total_entities = len(filtered.entities)
+            # ========== Phase 2: Generate Agent Profiles & Swarm Cohort ==========
+            generator = OasisProfileGenerator(graph_id=state.graph_id)
+
+            # Expand seed entities into target swarm population cohort if target count is larger
+            if target_agent_count and target_agent_count > len(filtered.entities):
+                entities_for_sim = generator.expand_entities_to_population(
+                    filtered.entities, target_count=target_agent_count
+                )
+            else:
+                entities_for_sim = filtered.entities
+
+            total_entities = len(entities_for_sim)
             
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 0,
-                    "Starting generation...",
+                    f"Starting generation of {total_entities} swarm personas...",
                     current=0,
                     total=total_entities
                 )
-            
-            # Pass graph_id to enable Kuzu retrieval for richer context
-            generator = OasisProfileGenerator(graph_id=state.graph_id)
             
             def profile_progress(current, total, msg):
                 if progress_callback:
@@ -383,15 +392,17 @@ class SimulationManager:
                 realtime_platform = "twitter"
             
             profiles = generator.generate_profiles_from_entities(
-                entities=filtered.entities,
+                entities=entities_for_sim,
                 use_llm=use_llm_for_profiles,
                 progress_callback=profile_progress,
                 graph_id=state.graph_id,  # Pass graph_id for Kuzu retrieval
                 parallel_count=parallel_profile_count,  # Parallel generation count
                 realtime_output_path=realtime_output_path,  # Real-time save path
-                output_platform=realtime_platform  # Output format
+                output_platform=realtime_platform,  # Output format
+                target_agent_count=target_agent_count
             )
             
+            state.entities_count = len(entities_for_sim)
             state.profiles_count = len(profiles)
             
             # Save Profile files (note: Twitter uses CSV format, Reddit uses JSON format)
@@ -452,7 +463,7 @@ class SimulationManager:
                 graph_id=state.graph_id,
                 simulation_requirement=simulation_requirement,
                 document_text=document_text,
-                entities=filtered.entities,
+                entities=entities_for_sim,
                 enable_twitter=state.enable_twitter,
                 enable_reddit=state.enable_reddit
             )

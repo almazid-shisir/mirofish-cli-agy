@@ -140,7 +140,7 @@ def create_oasis_model(config: Dict[str, Any], use_boost: bool = False):
         os.environ.get('LLM_PROVIDER')
         or config.get('llm_provider')
         or Config.LLM_PROVIDER
-        or 'claude-cli'
+        or 'agy-cli'
     ).lower()
 
     model = config.get('llm_model') or provider
